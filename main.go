@@ -1,31 +1,34 @@
 package main
 
 import (
+	"github.com/UstinovV/wm_api/apiserver"
+	_"github.com/UstinovV/wm_api/apiserver"
 	_ "github.com/lib/pq"
-	"database/sql"
-	"fmt"
+	_"database/sql"
+	_"fmt"
+	"gopkg.in/yaml.v2"
+	"log"
+	"os"
 )
 
-const (
-	host     = "172.20.0.3"
-	port     = 5432
-	user     = "postgres"
-	password = ""
-	dbname   = "wm"
-)
 
 func main() {
-	fmt.Println("API")
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-	db, err := sql.Open("postgres", psqlInfo)
+	f, err := os.Open("config.yml")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	err = db.Ping()
+	defer f.Close()
+
+	config :=  apiserver.NewConfig()
+	decoder := yaml.NewDecoder(f)
+	err = decoder.Decode(&config)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	defer db.Close()
+
+	s := apiserver.New(config)
+
+	if err := s.Start(); err != nil {
+		log.Fatal(err)
+	}
 }

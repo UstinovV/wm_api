@@ -1,11 +1,15 @@
 package apiserver
 
+import "github.com/UstinovV/wm_api/database"
+
 type Config struct {
 	Port string `yaml:"port"`
 	Host string `yaml:"host"`
-	DatabaseUrl string `yaml:"database_ulr"`
+	Database *database.Config
 }
 
 func NewConfig() *Config {
-	return &Config{}
+	return &Config{
+		Database:	database.NewConfig(),
+	}
 }

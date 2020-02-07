@@ -2,8 +2,6 @@ package main
 
 import (
 	"github.com/UstinovV/wm_api/apiserver"
-	_"github.com/UstinovV/wm_api/apiserver"
-	_ "github.com/lib/pq"
 	_"database/sql"
 	_"fmt"
 	"gopkg.in/yaml.v2"

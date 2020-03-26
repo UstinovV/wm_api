@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/UstinovV/wm_api/apiserver"
 	_"database/sql"
 	_"fmt"
@@ -23,7 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	fmt.Println(config)
 	s := apiserver.New(config)
 
 	if err := s.Start(); err != nil {

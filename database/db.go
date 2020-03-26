@@ -2,22 +2,24 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/lib/pq"
 	)
 
 type Database struct {
-	config *Config
-	connection *sql.DB
+	connection string
+	db *sql.DB
 }
 
-func New(config *Config) *Database{
+func New(connection string) *Database{
 	return &Database{
-		config: config,
+		connection: connection,
 	}
 }
 
 func (database *Database) Open() error {
-	db, err := sql.Open("postgres", database.config.DatabaseUrl)
+	fmt.Println(database.connection)
+	db, err := sql.Open("postgres", database.connection)
 	if err != nil {
 		return err
 	}
@@ -26,13 +28,13 @@ func (database *Database) Open() error {
 		return err
 	}
 
-	database.connection = db
+	database.db = db
 
 	return nil
 }
 
 func (database *Database) Close() {
-	database.connection.Close()
+	database.db.Close()
 }
 
 

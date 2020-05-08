@@ -1,26 +1,25 @@
-package apiserver
+package main
 
 import (
-	"github.com/UstinovV/wm_api/database"
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
 )
 
-type APIServer struct{
+type Server struct{
 	config *Config
 	router *mux.Router
-	database *database.Database
+	db *DB
 }
 
-func New(config *Config) *APIServer {
-	return &APIServer{
+func NewServer(config *Config) *Server {
+	return &Server{
 		config: config,
 		router: mux.NewRouter(),
 	}
 }
 
-func (s *APIServer) Start() error {
+func (s *Server) Start() error {
 	s.configureRouter()
 
 	if err := s.configureDatabase(); err != nil {
@@ -30,23 +29,23 @@ func (s *APIServer) Start() error {
 	return http.ListenAndServe(s.config.Port, s.router)
 }
 
-func (s *APIServer) configureRouter() {
+func (s *Server) configureRouter() {
 	s.router.HandleFunc("/index", s.handleIndex())
 }
 
-func (s *APIServer) configureDatabase() error {
-	db := database.New(s.config.Database)
+func (s *Server) configureDatabase() error {
+	db := NewDB(s.config.DBConnection)
 	if err := db.Open(); err != nil {
 		return err
 	}
 
-	s.database = db
+	s.db = db
 
 	return nil
 }
 
 
-func (s *APIServer) handleIndex()  http.HandlerFunc {
+func (s *Server) handleIndex()  http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, "index")
 	}

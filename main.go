@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"github.com/UstinovV/wm_api/apiserver"
+	_"fmt"
 	_"database/sql"
 	_"fmt"
 	"gopkg.in/yaml.v2"
@@ -18,16 +17,18 @@ func main() {
 	}
 	defer f.Close()
 
-	config :=  apiserver.NewConfig()
+	config :=  NewConfig()
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(config)
-	s := apiserver.New(config)
-
-	if err := s.Start(); err != nil {
-		log.Fatal(err)
+	serv := NewServer(config)
+	err = serv.Start()
+	if err != nil {
+		log.Fatal("Server error", err)
 	}
+	//if err := s.Start(); err != nil {
+	//	log.Fatal(err)
+	//}
 }

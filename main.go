@@ -23,12 +23,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	serv := NewServer(config)
+
 	err = serv.Start()
 	if err != nil {
 		log.Fatal("Server error", err)
 	}
-	//if err := s.Start(); err != nil {
-	//	log.Fatal(err)
-	//}
+
 }

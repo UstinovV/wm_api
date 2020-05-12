@@ -2,9 +2,8 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq"
-	)
+)
 
 type DB struct {
 	connection string
@@ -18,7 +17,6 @@ func NewDB(connection string) *DB{
 }
 
 func (DB *DB) Open() error {
-	fmt.Println(DB.connection)
 	db, err := sql.Open("postgres", DB.connection)
 	if err != nil {
 		return err

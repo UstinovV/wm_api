@@ -1,10 +1,10 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -34,7 +34,6 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) configureRouter() {
-	s.router.HandleFunc("/index", s.handleIndex())
 	s.router.HandleFunc("/offers", s.getOffersList)
 	s.router.HandleFunc("/offer/{id:[a-zA-Z0-9]+}", s.getOffer)
 }
@@ -50,14 +49,32 @@ func (s *Server) configureDatabase() error {
 	return nil
 }
 
-func (s *Server) handleIndex()  http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		_, _ = io.WriteString(w, "index")
-	}
-}
-
 func (s *Server) getOffer(w http.ResponseWriter, r *http.Request)  {
-	//vars := mux.Vars(r)
+	vars := mux.Vars(r)
+	w.Header().Set("Content-Type", "application/json")
+	offer := Offer{}
+	encoder := json.NewEncoder(w)
+	//
+	query := "SELECT short_id, title, content, created_at from offer where short_id = $1"
+	if val, ok := vars["id"]; ok {
+		err := s.db.db.QueryRow(query, val).Scan(&offer.Id, &offer.Title, &offer.Content, &offer.CreatedAt)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				w.WriteHeader(http.StatusOK)
+				encoder.Encode(map[string]string{})
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+				encoder.Encode(map[string]string{"error": err.Error()})
+			}
+			return
+		}
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(map[string]string{"error": "Missing parameter ID"})
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	encoder.Encode(offer)
 }
 
 func (s *Server) getOffersList(w http.ResponseWriter, r *http.Request)  {

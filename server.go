@@ -36,6 +36,8 @@ func (s *Server) Start() error {
 func (s *Server) configureRouter() {
 	s.router.HandleFunc("/offers", s.getOffersList)
 	s.router.HandleFunc("/offer/{id:[a-zA-Z0-9]+}", s.getOffer)
+	s.router.HandleFunc("/companies", s.getCompaniesList)
+	s.router.HandleFunc("/company/{id:[a-zA-Z0-9]+}", s.getCompany)
 }
 
 func (s *Server) configureDatabase() error {
@@ -54,7 +56,7 @@ func (s *Server) getOffer(w http.ResponseWriter, r *http.Request)  {
 	w.Header().Set("Content-Type", "application/json")
 	offer := Offer{}
 	encoder := json.NewEncoder(w)
-	//
+
 	query := "SELECT short_id, title, content, created_at from offer where short_id = $1"
 	if val, ok := vars["id"]; ok {
 		err := s.db.db.QueryRow(query, val).Scan(&offer.Id, &offer.Title, &offer.Content, &offer.CreatedAt)
@@ -79,7 +81,7 @@ func (s *Server) getOffer(w http.ResponseWriter, r *http.Request)  {
 
 func (s *Server) getOffersList(w http.ResponseWriter, r *http.Request)  {
 	w.Header().Set("Content-Type", "application/json")
-	offersList := make([]Offer,0, 5)
+	offersList := make([]Offer,0, 10)
 	offer := Offer{}
 	encoder := json.NewEncoder(w)
 
@@ -138,5 +140,97 @@ func (s *Server) getOffersList(w http.ResponseWriter, r *http.Request)  {
 
 	w.WriteHeader(http.StatusOK)
 	encoder.Encode(offersList)
+
+}
+
+func (s *Server) getCompany(w http.ResponseWriter, r *http.Request)  {
+	vars := mux.Vars(r)
+	w.Header().Set("Content-Type", "application/json")
+	company := Company{}
+	encoder := json.NewEncoder(w)
+
+	query := "SELECT c.short_id, ci.name, ci.description from company c where short_id = $1 left join company_info ci on c.info_id = ci.id"
+	if val, ok := vars["id"]; ok {
+		err := s.db.db.QueryRow(query, val).Scan(&company.Id, &company.Name, &company.Description)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				w.WriteHeader(http.StatusOK)
+				encoder.Encode(map[string]string{})
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+				encoder.Encode(map[string]string{"error": err.Error()})
+			}
+			return
+		}
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(map[string]string{"error": "Missing parameter ID"})
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	encoder.Encode(company)
+}
+
+func (s *Server) getCompaniesList(w http.ResponseWriter, r *http.Request)  {
+	w.Header().Set("Content-Type", "application/json")
+	companiesList := make([]Company,0, 10)
+	company := Company{}
+	encoder := json.NewEncoder(w)
+
+	query := "SELECT c.short_id, ci.name, ci.description from company c left join company_info ci on c.info_id = ci.id"
+	where, limit, offset := "", "", ""
+
+	if val := r.URL.Query().Get("query"); val != "" {
+		where = where + fmt.Sprintf("c.name like %s", "'%" + val + "%'")
+	}
+	if val := r.URL.Query().Get("limit"); val != "" {
+		i, err := strconv.Atoi(val)
+		if err != nil {
+			log.Println("Bad request parameter `limit`", err)
+		}
+		limit = limit + fmt.Sprintf(" limit %d", i)
+	}
+	if val := r.URL.Query().Get("offset"); val != "" {
+		i, err := strconv.Atoi(val)
+		if err != nil {
+			log.Println("Bad request parameter `offset`", err)
+		}
+		offset = offset + fmt.Sprintf(" offset %d", i)
+	}
+
+	if len(where) > 0 {
+		query = query + " where " + where
+	}
+	if len(limit) > 0 {
+		query = query + limit
+	} else {
+		query = query + " limit 10"
+	}
+	if len(offset) > 0 {
+		query = query + offset
+	}
+
+	rows, err := s.db.db.Query(query)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(map[string]string{"error": err.Error()})
+		return
+		//log.Fatal("Error", err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err = rows.Scan(&company.Id, &company.Name, &company.Description)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			encoder.Encode(map[string]string{"error": err.Error()})
+			return
+			//log.Fatal("Error scan")
+		}
+		companiesList = append(companiesList, company)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	encoder.Encode(companiesList)
 
 }

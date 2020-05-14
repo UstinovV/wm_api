@@ -7,10 +7,10 @@ import (
 
 type DB struct {
 	connection string
-	db *sql.DB
+	db         *sql.DB
 }
 
-func NewDB(connection string) *DB{
+func NewDB(connection string) *DB {
 	return &DB{
 		connection: connection,
 	}
@@ -34,6 +34,3 @@ func (DB *DB) Open() error {
 func (DB *DB) Close() {
 	DB.db.Close()
 }
-
-
-

@@ -1,14 +1,12 @@
 package main
 
 import (
-	_"fmt"
-	_"database/sql"
-	_"fmt"
+	_ "database/sql"
+	_ "fmt"
 	"gopkg.in/yaml.v2"
 	"log"
 	"os"
 )
-
 
 func main() {
 	f, err := os.Open("config.yml")
@@ -17,7 +15,7 @@ func main() {
 	}
 	defer f.Close()
 
-	config :=  NewConfig()
+	config := NewConfig()
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&config)
 	if err != nil {

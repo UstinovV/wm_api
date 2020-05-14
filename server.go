@@ -7,13 +7,14 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 )
 
-type Server struct{
+type Server struct {
 	config *Config
 	router *mux.Router
-	db *DB
+	db     *DB
 }
 
 func NewServer(config *Config) *Server {
@@ -51,7 +52,7 @@ func (s *Server) configureDatabase() error {
 	return nil
 }
 
-func (s *Server) getOffer(w http.ResponseWriter, r *http.Request)  {
+func (s *Server) getOffer(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	w.Header().Set("Content-Type", "application/json")
 	offer := Offer{}
@@ -79,51 +80,22 @@ func (s *Server) getOffer(w http.ResponseWriter, r *http.Request)  {
 	encoder.Encode(offer)
 }
 
-func (s *Server) getOffersList(w http.ResponseWriter, r *http.Request)  {
+func (s *Server) getOffersList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	offersList := make([]Offer,0, 10)
+	offersList := make([]Offer, 0, 10)
 	offer := Offer{}
 	encoder := json.NewEncoder(w)
 
 	query := "SELECT short_id, title, content, created_at from offer "
-	where, limit, offset := "", "", ""
+	allowedParams := []string{"title", "limit", "offset"}
+	parsedString, queryArgs := parseQueryParams(r.URL.Query(), allowedParams)
 
-	if val := r.URL.Query().Get("query"); val != "" {
-		where = where + fmt.Sprintf("title like %s", "'%" + val + "%'")
-	}
-	if val := r.URL.Query().Get("limit"); val != "" {
-		i, err := strconv.Atoi(val)
-		if err != nil {
-			log.Println("Bad request parameter `limit`", err)
-		}
-		limit = limit + fmt.Sprintf(" limit %d", i)
-	}
-	if val := r.URL.Query().Get("offset"); val != "" {
-		i, err := strconv.Atoi(val)
-		if err != nil {
-			log.Println("Bad request parameter `offset`", err)
-		}
-		offset = offset + fmt.Sprintf(" offset %d", i)
-	}
+	rows, err := s.db.db.Query(query + parsedString, queryArgs...)
 
-	if len(where) > 0 {
-		query = query + " where " + where
-	}
-	if len(limit) > 0 {
-		query = query + limit
-	} else {
-		query = query + " limit 10"
-	}
-	if len(offset) > 0 {
-		query = query + offset
-	}
-
-	rows, err := s.db.db.Query(query)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
-		//log.Fatal("Error", err.Error())
 	}
 	defer rows.Close()
 
@@ -143,7 +115,7 @@ func (s *Server) getOffersList(w http.ResponseWriter, r *http.Request)  {
 
 }
 
-func (s *Server) getCompany(w http.ResponseWriter, r *http.Request)  {
+func (s *Server) getCompany(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	w.Header().Set("Content-Type", "application/json")
 	company := Company{}
@@ -171,51 +143,22 @@ func (s *Server) getCompany(w http.ResponseWriter, r *http.Request)  {
 	encoder.Encode(company)
 }
 
-func (s *Server) getCompaniesList(w http.ResponseWriter, r *http.Request)  {
+func (s *Server) getCompaniesList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	companiesList := make([]Company,0, 10)
+	companiesList := make([]Company, 0, 10)
 	company := Company{}
 	encoder := json.NewEncoder(w)
 
 	query := "SELECT c.short_id, ci.name, ci.description from company c left join company_info ci on c.info_id = ci.id"
-	where, limit, offset := "", "", ""
 
-	if val := r.URL.Query().Get("query"); val != "" {
-		where = where + fmt.Sprintf("c.name like %s", "'%" + val + "%'")
-	}
-	if val := r.URL.Query().Get("limit"); val != "" {
-		i, err := strconv.Atoi(val)
-		if err != nil {
-			log.Println("Bad request parameter `limit`", err)
-		}
-		limit = limit + fmt.Sprintf(" limit %d", i)
-	}
-	if val := r.URL.Query().Get("offset"); val != "" {
-		i, err := strconv.Atoi(val)
-		if err != nil {
-			log.Println("Bad request parameter `offset`", err)
-		}
-		offset = offset + fmt.Sprintf(" offset %d", i)
-	}
+	allowedParams := []string{"name", "limit", "offset"}
+	parsedString, queryArgs := parseQueryParams(r.URL.Query(), allowedParams)
 
-	if len(where) > 0 {
-		query = query + " where " + where
-	}
-	if len(limit) > 0 {
-		query = query + limit
-	} else {
-		query = query + " limit 10"
-	}
-	if len(offset) > 0 {
-		query = query + offset
-	}
-
-	rows, err := s.db.db.Query(query)
+	rows, err := s.db.db.Query(query + parsedString, queryArgs...)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		encoder.Encode(map[string]string{"error": err.Error()})
 		return
-		//log.Fatal("Error", err.Error())
 	}
 	defer rows.Close()
 
@@ -233,4 +176,51 @@ func (s *Server) getCompaniesList(w http.ResponseWriter, r *http.Request)  {
 	w.WriteHeader(http.StatusOK)
 	encoder.Encode(companiesList)
 
+}
+
+
+func parseQueryParams(values url.Values, requestedParams []string) (string, []interface{}) {
+	result, where, limit, offset := "", "", "", ""
+	args := []interface{}{}
+	for _, param := range requestedParams {
+		if val := values.Get(param); val != "" {
+			switch param {
+			case "title":
+				where = where + fmt.Sprintf("title like $%d", len(args)+1)
+				args = append(args, "%"+val+"%")
+			case "name":
+				where = where + fmt.Sprintf("ci.name like $%d", len(args)+1)
+				args = append(args, "%"+val+"%")
+			case "limit":
+				i, err := strconv.Atoi(val)
+				if err != nil {
+					log.Println("Bad request parameter `limit`", err)
+				} else {
+					limit = limit + fmt.Sprintf(" limit $%d", len(args)+1)
+					args = append(args, i)
+				}
+			case "offset":
+				i, err := strconv.Atoi(val)
+				if err != nil {
+					log.Println("Bad request parameter `offset`", err)
+				}
+				offset = offset + fmt.Sprintf(" offset $%d", i)
+				args = append(args, i)
+			}
+		}
+	}
+
+	if len(where) > 0 {
+		result = result + " where " + where
+	}
+	if len(limit) > 0 {
+		result = result + limit
+	} else {
+		result = result + " limit 10"
+	}
+	if len(offset) > 0 {
+		result = result + offset
+	}
+
+	return result, args
 }

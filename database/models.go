@@ -1,6 +1,8 @@
 package database
 
-import "time"
+import (
+	"time"
+)
 
 type Offer struct {
 	Id        string    `json: "id"`

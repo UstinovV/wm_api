@@ -35,10 +35,10 @@ func (s *Server) Start() error {
 func (s *Server) configureRouter() {
 	s.router.Use(prepareResponseMiddleware)
 	s.router.Use(s.logRequestMiddleware)
-	s.router.HandleFunc("/offers", s.getOffersList)
-	s.router.HandleFunc("/offer/{id:[a-zA-Z0-9]+}", s.getOffer)
-	s.router.HandleFunc("/companies", s.getCompaniesList)
-	s.router.HandleFunc("/company/{id:[a-zA-Z0-9]+}", s.getCompany)
+	s.router.HandleFunc("/offers", s.getOffersListHandler)
+	s.router.HandleFunc("/offer/{id:[a-zA-Z0-9]+}", s.getOfferHandler)
+	s.router.HandleFunc("/companies", s.getCompaniesListHandler)
+	s.router.HandleFunc("/company/{id:[a-zA-Z0-9']+}", s.getCompanyHandler)
 }
 
 func (s *Server) configureDatabase() error {

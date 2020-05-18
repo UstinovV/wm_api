@@ -37,3 +37,5 @@ func (DB *DB) Open() error {
 func (DB *DB) Close() {
 	DB.Db.Close()
 }
+
+type NullString sql.NullString

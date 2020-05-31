@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+// protoc --go_out=plugins=grpc:. *.proto
+
+package mpsv;
+
+message MpsvUrl {
+    string url = 1;
+}
+
+message MpsvOffer {
+    string mpsvId = 1;
+    string title = 2;
+    string content = 3;
+
+}
+
+service MpsvParser {
+    rpc ParseMpsvUrl (MpsvUrl) returns (stream MpsvOffer) {}
+}
+

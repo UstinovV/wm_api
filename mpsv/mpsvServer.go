@@ -21,9 +21,9 @@ func (s *MpsvServer) ParseMpsvUrl (url *MpsvUrl, outStream MpsvParser_ParseMpsvU
 
 	defer xmlFile.Close()
 	decoder := xml.NewDecoder(xmlFile)
-
+	offer := MpsvOffer{}
 	for {
-		offer := MpsvOffer{}
+
 		token, tokenErr := decoder.Token()
 		if tokenErr != nil && tokenErr != io.EOF {
 			fmt.Println("error happend", tokenErr)
@@ -40,7 +40,6 @@ func (s *MpsvServer) ParseMpsvUrl (url *MpsvUrl, outStream MpsvParser_ParseMpsvU
 		case xml.StartElement:
 			switch tok.Name.Local {
 			case "VOLNEMISTO":
-				fmt.Println("found ")
 				for _, attr := range tok.Attr {
 					if attr.Name.Local == "uid" {
 						offer.MpsvId = attr.Value
@@ -63,11 +62,13 @@ func (s *MpsvServer) ParseMpsvUrl (url *MpsvUrl, outStream MpsvParser_ParseMpsvU
 
 		case xml.EndElement:
 			if tok.Name.Local == "VOLNEMISTO" {
-				 if err = outStream.Send(&MpsvOffer{
-					 MpsvId:  "123",
-					 Title:   "some title",
-					 Content: "asdasd",
-				 }); err != nil {
+				//TODO: transactions and bulk insert
+				//TODO: rabbit MQ
+				if err = outStream.Send(&MpsvOffer{
+					MpsvId:  offer.MpsvId,
+					Title:   offer.Title,
+					Content: offer.Content,
+				}); err != nil {
 				 	return err
 				}
 			}

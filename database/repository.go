@@ -3,7 +3,7 @@ package database
 func (db *DB) GetOffersList(queryString string , queryArgs []interface{}) ([]Offer, error) {
 	offersList := make([]Offer, 0, 10)
 	offer := Offer{}
-	query := "SELECT short_id, title, content, created_at from offer "
+	query := "SELECT id, title, content, created_at from temp_offers "
 
 	rows, err := db.Db.Query(query + queryString, queryArgs...)
 
@@ -25,7 +25,7 @@ func (db *DB) GetOffersList(queryString string , queryArgs []interface{}) ([]Off
 
 func (db *DB) GetOffer(id string) (*Offer, error) {
 	offer := &Offer{}
-	query := "SELECT short_id, title, content, created_at from offer where short_id = $1"
+	query := "SELECT id, title, content, created_at from temp_offers where short_id = $1"
 	err := db.Db.QueryRow(query, id).Scan(&offer.Id, &offer.Title, &offer.Content, &offer.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (db *DB) GetOffer(id string) (*Offer, error) {
 
 func (db *DB) GetCompany(id string) (*Company, error) {
 	company := Company{}
-	query := "SELECT c.short_id, COALESCE(ci.name, ''), COALESCE(ci.description, '') from company c left join company_info ci on c.info_id = ci.id where c.short_id = $1 "
+	query := "SELECT id, COALESCE(name, ''), COALESCE(description, '') from temp_companies id = $1 "
 	err := db.Db.QueryRow(query, id).Scan(&company.Id, &company.Name, &company.Description)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (db *DB) GetCompany(id string) (*Company, error) {
 func (db *DB) GetCompaniesList(queryString string , queryArgs []interface{}) ([]Company, error) {
 	companiesList := make([]Company, 0, 10)
 	company := Company{}
-	query := "SELECT c.short_id, ci.name, ci.description from company c left join company_info ci on c.info_id = ci.id"
+	query := "SELECT id, name, description from temp_companies"
 
 	rows, err := db.Db.Query(query + queryString, queryArgs...)
 	if err != nil {

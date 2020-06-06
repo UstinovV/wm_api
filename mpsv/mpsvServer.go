@@ -13,6 +13,7 @@ type MpsvServer struct {
 
 func (s *MpsvServer) ParseMpsvUrl (url *MpsvUrl, outStream MpsvParser_ParseMpsvUrlServer) error {
 	fmt.Printf("Received urls %s", url.Url)
+	// https://www.uradprace.cz/web/cz/ke-stazeni-1
 	xmlFile, err := os.Open("example.xml")
 	if err != nil {
 		fmt.Println(err)
@@ -62,8 +63,6 @@ func (s *MpsvServer) ParseMpsvUrl (url *MpsvUrl, outStream MpsvParser_ParseMpsvU
 
 		case xml.EndElement:
 			if tok.Name.Local == "VOLNEMISTO" {
-				//TODO: transactions and bulk insert
-				//TODO: rabbit MQ
 				if err = outStream.Send(&MpsvOffer{
 					MpsvId:  offer.MpsvId,
 					Title:   offer.Title,

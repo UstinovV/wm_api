@@ -8,12 +8,12 @@ import (
 )
 
 func main() {
-	lis, err := net.Listen("tcp", ":80011")
+	lis, err := net.Listen("tcp", ":8011")
 	if err != nil {
 		log.Fatal("Error to start server ", err)
 	}
 
-	s := mpsv.MpsvServer{}
+	s := mpsv.MpsvParser{}
 
 	grpcServer := grpc.NewServer()
 	mpsv.RegisterMpsvParserServer(grpcServer, &s)

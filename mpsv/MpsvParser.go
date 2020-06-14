@@ -7,11 +7,9 @@ import (
 	"os"
 )
 
-type MpsvServer struct {
+type MpsvParser struct {}
 
-}
-
-func (s *MpsvServer) ParseMpsvUrl (url *MpsvUrl, outStream MpsvParser_ParseMpsvUrlServer) error {
+func (s *MpsvParser) ParseMpsvUrl (url *MpsvUrl, outStream MpsvParser_ParseMpsvUrlServer) error {
 	fmt.Printf("Received urls %s", url.Url)
 	// https://www.uradprace.cz/web/cz/ke-stazeni-1
 	xmlFile, err := os.Open("example.xml")

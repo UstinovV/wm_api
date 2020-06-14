@@ -19,6 +19,6 @@ func main() {
 	mpsv.RegisterMpsvParserServer(grpcServer, &s)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatal("Failed to serve grpc " , err)
+		log.Fatal("Failed to serve grpc ", err)
 	}
 }

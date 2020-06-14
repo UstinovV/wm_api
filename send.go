@@ -5,11 +5,12 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/UstinovV/wm_api/mpsv"
+	"github.com/streadway/amqp"
 	"io"
 	"log"
-	"github.com/streadway/amqp"
 	"os"
 )
+
 func main() {
 	//docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 
@@ -105,11 +106,11 @@ func main() {
 					fmt.Println("Cant send message")
 				}
 				err = ch.Publish(
-					"mpsv_topic",     // exchange
-					"offers", // routing key
-					false,  // mandatory
-					false,  // immediate
-					amqp.Publishing {
+					"mpsv_topic", // exchange
+					"offers",     // routing key
+					false,        // mandatory
+					false,        // immediate
+					amqp.Publishing{
 						ContentType: "application/json",
 						Body:        messageBody,
 					})

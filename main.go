@@ -15,7 +15,7 @@ func main() {
 
 	f, err := os.Open("config.yml")
 	if err != nil {
-		log.Fatal("Config open error: ",err)
+		log.Fatal("Config open error: ", err)
 	}
 	defer f.Close()
 
@@ -23,7 +23,7 @@ func main() {
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&config)
 	if err != nil {
-		log.Fatal("Config error: ",err)
+		log.Fatal("Config error: ", err)
 	}
 	fmt.Println(config.DBConnection)
 	logger, _ := zap.NewProduction()

@@ -11,3 +11,7 @@ CREATE TABLE temp_companies (
     name varchar(1000),
     description text
 );
+
+CREATE TABLE mpsv_files (
+    title varchar(100),
+);

@@ -36,12 +36,12 @@ func main() {
 	}
 
 	q, err := ch.QueueDeclare(
-		"", // name
-		false,   // durable
-		false,   // delete when unused
-		false,   // exclusive
-		false,   // no-wait
-		nil,     // arguments
+		"",    // name
+		false, // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
 	)
 	if err != nil {
 		log.Fatal(err, "Failed to declare a queue")
@@ -62,14 +62,13 @@ func main() {
 
 	err = ch.QueueBind(
 		q.Name,       // queue name
-		"offers",            // routing key
+		"offers",     // routing key
 		"mpsv_topic", // exchange
 		false,
 		nil)
 	if err != nil {
 		log.Fatal(err, "Failed to bind queue")
 	}
-
 
 	forever := make(chan bool)
 
